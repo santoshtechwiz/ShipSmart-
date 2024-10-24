@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Order {
+  id           Int       @id @default(autoincrement()) // SQLite uses Int for autoincrement IDs
+  created_at   DateTime  @default(now())
+  sender       String?
+  isDelivered  Boolean?
+  orderDate    DateTime  @default(now()) // Date when the order is placed
+  deliveryDate DateTime? // Optional delivery date
+  recepient    Int? // SQLite does not support BigInt, so we use Int
+  orderStatus  String // Replace enum with String to store order status
+  orderContent String?
+  source       String?
+  destination  String?
+  orderNumber  String    @unique
+  User         User?     @relation(fields: [recepient], references: [id])
+  containerId  Int?      // Foreign key to Container
+
+}
+
+model User {
+  id         Int      @id @default(autoincrement()) // SQLite uses Int for autoincrement IDs
+  created_at DateTime @default(now())
+  username   String
+  password   String
+  email      String   @unique
+  Order      Order[]
+}
+
+model Container {
+  id              Int       @id @default(autoincrement())
+  containerNumber String    @unique
+  status          String
+  currentLocation String
+  createdAt       DateTime  @default(now())
+}
