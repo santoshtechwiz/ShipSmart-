@@ -5,13 +5,10 @@ import { Button } from "@/commons/components/ui/button";
 import { Checkbox } from "@/commons/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/commons/components/ui/data-table/data-table-column-header";
 import { OrderSchema } from "@/commons/schema";
-import { CalendarIcon } from "@radix-ui/react-icons";
 import { ColumnDef } from "@tanstack/react-table";
 import * as z from "zod";
 import SelectCell from "./courier-select-cell";
 
-import { Pencil1Icon } from "@radix-ui/react-icons";
-import CourierRegisterForm from "../courier-register-form";
 import CourierEditForm from "./courier-edit-form";
 
 export const columns: ColumnDef<z.infer<typeof OrderSchema>>[] = [
@@ -48,14 +45,38 @@ export const columns: ColumnDef<z.infer<typeof OrderSchema>>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Order Date" />
     ),
-  },
+    cell: ({ row }) => {
+      const orderDate = row.getValue("orderDate");
+      const formattedDate = orderDate
+        ? new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }).format(new Date(orderDate))
+        : "-"; // Show a dash if the date is missing or invalid
+      return <span>{formattedDate}</span>;
+    },
+  }
+  ,
  
   {
     accessorKey: "deliveryDate",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Delivery Date" />
     ),
+    cell: ({ row }) => {
+      const deliveryDate = row.getValue("deliveryDate");
+      const formattedDate = deliveryDate
+        ? new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }).format(new Date(deliveryDate))
+        : "-"; // Show a dash if the date is missing or invalid
+      return <span>{formattedDate}</span>;
+    },
   },
+  
   {
     accessorKey: "source",
     header: ({ column }) => (
@@ -126,9 +147,12 @@ export const columns: ColumnDef<z.infer<typeof OrderSchema>>[] = [
   {
     accessorKey: "edit",
     header: "Actions", // Or "Edit" if you prefer
-    cell: ({ row }) => (
-      <CourierEditForm triggerButtonLabel={"Edit"} orderToUpdadte={row.original} />
-    ),
+    cell: ({ row }) => {
+      const isDelivered = row.getValue("isDelivered") === "Yes";
+      console.log(isDelivered);
+      return isDelivered ? null : <CourierEditForm triggerButtonLabel={"Edit"} orderToUpdadte={row.original} />;
+     
+    },
     enableSorting: false,
     enableHiding: false,
   },

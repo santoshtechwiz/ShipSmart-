@@ -5,6 +5,7 @@ import { columns } from "./courier-table-columns";
 
 export default async function CourierOrderTable() {
   let orders = await getOrders();
+  console.log(orders);
   if (orders.error) {
     return <ErrorBoundary error={orders.error} />;
   }

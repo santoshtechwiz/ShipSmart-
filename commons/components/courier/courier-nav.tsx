@@ -10,19 +10,23 @@ interface LandingCardProps {
 
 export default function CourierNav({ title, desc, asChild }: LandingCardProps) {
   return (
-    <nav className="w-full px-6 bg-primary">
-      <div className="flex justify-between items-center py-5 rounded-b-md flex-row w-full px-4  mx-auto ">
-        <div className="w-full ">
-          <h1 className="text-3xl flex flex-row items-center gap-x-2 text-white font-extrabold -skew-x-12 font-mono">
-            {title}
-            <TbTruckDelivery className="h-10 w-10" />
+    <nav className="w-full bg-primary">
+      <div className="flex justify-between items-center py-5 px-6 rounded-b-lg mx-auto max-w-7xl">
+        {/* Title and Icon */}
+        <div className="flex flex-col">
+          <h1 className="text-3xl text-white font-extrabold tracking-wide flex items-center gap-2">
+            Deepak's {title}
+            <TbTruckDelivery className="h-8 w-8 text-yellow-300" />
           </h1>
-          <h1 className="text-gray-100 text-xs">{desc}</h1>
+          <p className="text-sm text-gray-200 mt-1">{desc}</p>
         </div>
+
+        {/* Logout Button */}
         <div>
-          {" "}
           <Link href="/">
-            <Button variant="outline">Logout</Button>
+            <Button variant="outline" className="hover:bg-gray-100 hover:text-black transition-colors">
+              Logout
+            </Button>
           </Link>
         </div>
       </div>

@@ -44,12 +44,10 @@ import { getContainers } from "@/commons/lib/actions/container";
 
 interface CourierRegistrationFormProps {
   triggerButtonLabel: string;
-
 }
 
 export const CourierRegisterForm = ({
   triggerButtonLabel,
-
 }: CourierRegistrationFormProps) => {
   const [orderNumber, setOrderNumber] = useState("");
   const [containers, setContainers] = useState([]); // State to hold container list
@@ -57,7 +55,7 @@ export const CourierRegisterForm = ({
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
- const [order,setOrder]=useState<any>(null);
+  const [order, setOrder] = useState<any>(null);
   const form = useForm<z.infer<typeof OrderSchema>>({
     resolver: zodResolver(OrderSchema),
     defaultValues: {
@@ -69,10 +67,9 @@ export const CourierRegisterForm = ({
       orderStatus: "Order_Placed",
       orderDate: new Date(),
       deliveryDate: new Date(),
-      source:"",
-      destination:"",
+      source: "",
+      destination: "",
       containerId: "", // New field for the container
-
     },
   });
 
@@ -86,26 +83,40 @@ export const CourierRegisterForm = ({
     setOrderNumber(result);
     form.setValue("orderNumber", result);
   }
- // Fetch containers on component mount
- useEffect(() => {
- 
-  getContainers().then((data) => {
-    setContainers(data); // Set the container data to state
-  });
-  
-}, []);
-
-  const onSubmit = (values: z.infer<typeof OrderSchema>) => {
-    console.log(values);
-    setError("");
-    setSuccess("");
-    startTransition(() => {
-      addOrder(values).then((data:any) => {
-        console.log(data);
-        setError(data!.error);
-        setSuccess(data.success);
-      });
+  // Fetch containers on component mount
+  useEffect(() => {
+    getContainers().then((data) => {
+      setContainers(data); // Set the container data to state
     });
+  }, []);
+
+  const onSubmit = async (values: z.infer<typeof OrderSchema>) => {
+    try {
+      const isValid = await form.trigger(); // Trigger validation
+
+      if (isValid) {
+        console.log("Submitting values:", values);
+        setError("");
+        setSuccess("");
+
+        startTransition(() => {
+          addOrder(values)
+            .then((data: any) => {
+              console.log("Response from addOrder:", data);
+              setError(data!.error);
+              setSuccess(data.success);
+            })
+            .catch((err) => {
+              console.error("Error during order addition:", err);
+              setError("Failed to create order. Please try again.");
+            });
+        });
+      } else {
+        console.error("Validation failed. Check your input fields.");
+      }
+    } catch (error) {
+      console.error("Error during form submission:", error);
+    }
   };
 
   return (
@@ -136,7 +147,10 @@ export const CourierRegisterForm = ({
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 {/* Split into 2 columns */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Left Column */}
@@ -177,7 +191,7 @@ export const CourierRegisterForm = ({
                         </FormItem>
                       )}
                     />
-                    
+
                     {/* Recipient */}
                     <FormField
                       control={form.control}
@@ -243,16 +257,27 @@ export const CourierRegisterForm = ({
                         </FormItem>
                       )}
                     />
-                     {/* Container Dropdown */}
-                     <FormField
+                    {/* Container Dropdown */}
+                    <FormField
                       control={form.control}
                       name="containerId"
                       render={({ field }) => (
                         <FormItem className="w-full">
                           <FormLabel>Container</FormLabel>
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(selectedContainerNumber) => {
+                              const selectedContainer = containers.find(
+                                (container) =>
+                                  container.containerNumber ===
+                                  selectedContainerNumber
+                              );
+                              field.onChange(selectedContainer?.id); // Save containerId in form state
+                            }}
+                            defaultValue={
+                              containers.find(
+                                (container) => container.id === field.value
+                              )?.containerNumber
+                            }
                             disabled={isPending}
                           >
                             <FormControl>
@@ -262,7 +287,10 @@ export const CourierRegisterForm = ({
                             </FormControl>
                             <SelectContent>
                               {containers.map((container: any) => (
-                                <SelectItem key={container.id} value={container.id}>
+                                <SelectItem
+                                  key={container.id}
+                                  value={container.containerNumber}
+                                >
                                   {container.containerNumber}
                                 </SelectItem>
                               ))}
@@ -272,7 +300,6 @@ export const CourierRegisterForm = ({
                         </FormItem>
                       )}
                     />
-
                   </div>
 
                   {/* Right Column */}
@@ -285,7 +312,11 @@ export const CourierRegisterForm = ({
                         <FormItem className="w-full">
                           <FormLabel>Source</FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={isPending}   type="text"/>
+                            <Input
+                              {...field}
+                              disabled={isPending}
+                              type="text"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -298,7 +329,11 @@ export const CourierRegisterForm = ({
                         <FormItem className="w-full">
                           <FormLabel>Destination</FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={isPending}   type="text"/>
+                            <Input
+                              {...field}
+                              disabled={isPending}
+                              type="text"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

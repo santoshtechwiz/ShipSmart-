@@ -7,14 +7,14 @@ import {
 } from "@/commons/types";
 
 export const siteConfig: SiteConfig = {
-  title: "noovid",
+  title: "Delivery",
   desc: "Delivery Tracking System",
   backButtonLabel: "Back",
 };
 
 export const courierConfig: CourierConfig = {
-  title: "Nootrack",
-  desc: "Courier Service",
+  title: "Enterprize",
+  desc: "Timber Service",
   backButtonLabel: "Dashboard",
   route: "/courier",
 };

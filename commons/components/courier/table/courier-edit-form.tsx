@@ -33,7 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/commons/components/ui/select";
-import { addOrder } from "@/commons/lib/actions/order"; // Assuming addOrder is the right function
+import {
+  addOrder,
+  getRecepientEmail,
+  updateOrder,
+} from "@/commons/lib/actions/order"; // Assuming addOrder is the right function
 import { Pencil1Icon, PlusCircledIcon } from "@radix-ui/react-icons";
 import { useEffect, useState, useTransition } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -41,37 +45,39 @@ import { FaRedo } from "react-icons/fa";
 import { getContainers } from "@/commons/lib/actions/container";
 import { InputDate } from "../../ui/date";
 
-
 interface CourierRegistrationFormProps {
   triggerButtonLabel: string;
-  orderToUpdadte?: z.infer<typeof OrderSchema>; // Pass the order to edit
+  orderToUpdadte?: any; // Pass the order to edit
 }
 
 export const CourierEditForm = ({
   triggerButtonLabel,
-  orderToUpdadte 
+  orderToUpdadte,
 }: CourierRegistrationFormProps) => {
-  const [containers, setContainers] = useState([]); // State to hold container list
+  interface Container {
+    id: string;
+    containerNumber: string;
+  }
+
+  const [containers, setContainers] = useState<Container[]>([]); // State to hold container list
 
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
-
-  // Set default values from order1 or create a new order
-  const form = useForm<z.infer<typeof OrderSchema>>({
-    resolver: zodResolver(OrderSchema),
+  console.log(orderToUpdadte);
+  const form = useForm({
     defaultValues: {
       orderNumber: orderToUpdadte?.orderNumber || "",
       orderContent: orderToUpdadte?.orderContent || "",
       sender: orderToUpdadte?.sender || "",
-      recipient: orderToUpdadte?.recipient || "",
+      recipient: orderToUpdadte?.sender || "",
       isDelivered: orderToUpdadte?.isDelivered || false,
       orderStatus: orderToUpdadte?.orderStatus || "Order_Placed",
       orderDate: orderToUpdadte?.orderDate || new Date(),
       deliveryDate: orderToUpdadte?.deliveryDate || new Date(),
       source: orderToUpdadte?.source || "",
       destination: orderToUpdadte?.destination || "",
-      containerId: orderToUpdadte?.containerId || "", // New field for the container
+      containerId: orderToUpdadte?.containerId || "",
     },
   });
 
@@ -79,22 +85,34 @@ export const CourierEditForm = ({
   useEffect(() => {
     getContainers().then((data) => {
       setContainers(data); // Set the container data to state
+      console.log(data);
     });
   }, []);
 
-  const onSubmit = (values: z.infer<typeof OrderSchema>) => {
-    console.log(values);
-    setError("");
-    setSuccess("");
-    startTransition(() => {
-      addOrder(values).then((data: any) => {
-        console.log(data);
-        setError(data!.error);
-        setSuccess(data.success);
-      });
-    });
-  };
+  const onSubmit = async (values: z.infer<typeof OrderSchema>) => {
+    try {
+      console.log("Form Submitted Values:", values); // Log the values
+      setError("");
+      setSuccess("");
 
+      // Ensure that the updateOrder function is getting called
+      updateOrder(values)
+        .then((data: any) => {
+          console.log("Response from updateOrder:", data);
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setSuccess("Order updated successfully!");
+          }
+        })
+        .catch((err) => {
+          console.error("Error updating order:", err);
+          setError("An error occurred while updating the order.");
+        });
+    } catch (error) {
+      console.error("Error updating order:", error);
+    }
+  };
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -107,10 +125,14 @@ export const CourierEditForm = ({
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>
-            {orderToUpdadte ? `Edit Order ${orderToUpdadte.orderNumber}` : "Add New Order"}
+            {orderToUpdadte
+              ? `Edit Order ${orderToUpdadte.orderNumber}`
+              : "Add New Order"}
           </DialogTitle>
           <DialogDescription>
-            {orderToUpdadte ? "Edit the shipment order details here." : "Add a new shipment order here."}
+            {orderToUpdadte
+              ? "Edit the shipment order details here."
+              : "Add a new shipment order here."}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -134,6 +156,7 @@ export const CourierEditForm = ({
                         </FormLabel>
                         <FormControl>
                           <Input
+                            readOnly={true}
                             {...field}
                             disabled
                             type="text"
@@ -155,8 +178,8 @@ export const CourierEditForm = ({
                         </FormLabel>
                         <FormControl>
                           <Input
+                            disabled
                             {...field}
-                            disabled={isPending}
                             placeholder="Recipient@email.com"
                             type="email"
                           />
@@ -178,7 +201,7 @@ export const CourierEditForm = ({
                         <FormControl>
                           <Input
                             {...field}
-                            disabled={isPending}
+                            disabled
                             placeholder="Brand"
                             type="text"
                           />
@@ -200,7 +223,7 @@ export const CourierEditForm = ({
                         <FormControl>
                           <Input
                             {...field}
-                            disabled={isPending}
+                            disabled
                             placeholder="Package details"
                             type="text"
                           />
@@ -218,18 +241,25 @@ export const CourierEditForm = ({
                       <FormItem className="w-full">
                         <FormLabel>Container</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value} // Bind directly to field.value
+                          onValueChange={(value) => field.onChange(value)}
                           disabled={isPending}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select Container" />
+                              <SelectValue>
+                                {containers.find(
+                                  (container) => container.id === field.value
+                                )?.containerNumber || "Select Container"}
+                              </SelectValue>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {containers.map((container: any) => (
-                              <SelectItem key={container.id} value={container.id}>
+                              <SelectItem
+                                key={container.id}
+                                value={container.id} // Using container.id as the value to match field.value type
+                              >
                                 {container.containerNumber}
                               </SelectItem>
                             ))}
@@ -251,7 +281,7 @@ export const CourierEditForm = ({
                       <FormItem className="w-full">
                         <FormLabel>Source</FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={isPending} type="text" />
+                          <Input {...field} type="text" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -313,7 +343,7 @@ export const CourierEditForm = ({
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          disabled={isPending}
+                          disabled
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -342,10 +372,14 @@ export const CourierEditForm = ({
                 {isPending ? (
                   <div className="flex items-center">
                     <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mr-3" />
-                    {orderToUpdadte ? "Updating Shipment Order" : "Creating Shipment Order"}
+                    {orderToUpdadte
+                      ? "Updating Shipment Order"
+                      : "Creating Shipment Order"}
                   </div>
+                ) : orderToUpdadte ? (
+                  "Update Shipment Order"
                 ) : (
-                  (orderToUpdadte ? "Update Shipment Order" : "Generate Shipment Order")
+                  "Generate Shipment Order"
                 )}
               </Button>
             </form>

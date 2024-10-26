@@ -47,8 +47,9 @@ export const addOrder = async (values: z.infer<typeof OrderSchema>) => {
     source,
     destination,
     isDelivered,
+    containerId,
   } = validatedFields.data;
-
+console.log(validatedFields.data);
   try {
     const existingOrder = await prisma.order
       .findFirst({
@@ -91,6 +92,7 @@ export const addOrder = async (values: z.infer<typeof OrderSchema>) => {
           source:source,
           destination:destination,
           isDelivered: false,
+          containerId:containerId,
         },
       })
       .finally(() => {
@@ -192,6 +194,7 @@ export const getOrders = async (username?: string) => {
         source: order.source,
         destination: order.destination,
         username: order.User.username,
+        containerId: order.containerId,
       };
     });
     revalidatePath("/courier");
@@ -216,3 +219,72 @@ export const getOrderById = async (id?: number) => {
     return { error: `DEBUG: ${e}` };
   }
 };
+
+//get recipent email
+
+export const getRecepientEmail = async (id?: number) => {
+  try {
+    const order = await prisma.order
+      .findUnique({
+        where: {
+          id: id,
+        },
+      })
+      .finally(() => {
+        prisma.$disconnect();
+      });
+    return order;
+  } catch (e) {
+    return { error: `DEBUG: ${e}` };
+  }
+};
+
+//update order 
+
+export const updateOrder = async (values: z.infer<typeof OrderSchema>) => {
+  const validatedFields = OrderSchema.safeParse(values);
+
+
+  const {
+   
+    orderNumber,
+    recipient,
+    sender,
+    orderContent,
+    orderDate,
+    deliveryDate,
+    orderStatus,
+    source,
+    destination,
+    isDelivered,
+    containerId
+  } = values
+
+  try {
+    await prisma.order
+      .update({
+        where: {
+          orderNumber: orderNumber,
+        },
+        data: {
+         
+          sender: sender,
+          orderContent: orderContent,
+          orderDate:orderDate,
+          deliveryDate:deliveryDate,
+          containerId:+containerId,
+          source:source,
+          destination:destination,
+          
+        },
+      })
+      .finally(() => {
+        prisma.$disconnect();
+      });
+    revalidatePath("/courier");
+    return { success: `Order ${orderNumber} Updated 👌` };
+  } catch (e) {
+    console.log(e);
+    return { error: e };
+  }
+}

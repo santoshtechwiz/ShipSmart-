@@ -22,27 +22,28 @@ export default function LandingCard({
   asChild,
 }: LandingCardProps) {
   return (
-    <Card className="max-w-lg w-full shadow-lg">
-      <CardHeader className="bg-primary items-center text-white rounded-t-md">
-        <CardTitle className="text-3xl font-semibold -skew-x-12 font-mono ">
+    <Card className="max-w-lg w-full shadow-lg rounded-md">
+      <CardHeader className="bg-primary text-center items-center text-white rounded-t-md p-4">
+        <CardTitle className="text-3xl font-semibold -skew-x-12 font-mono">
           {title}
         </CardTitle>
-        <CardDescription className="text-gray-300 text-xs">
+        <CardDescription className="text-gray-300 text-xs mt-2">
           {desc}
         </CardDescription>
       </CardHeader>
-      <hr />
-      <CardContent className="text-center mt-3">Select Platform</CardContent>
-      <CardFooter>
-        <div className="flex w-full gap-x-2">
-          <Link className="w-full" href={loginConfig.route}>
-            <Button variant="outline" className="w-full">
-              User
+      <CardContent className="text-center mt-4 p-4">
+        Select Platform
+      </CardContent>
+      <CardFooter className="p-4">
+        <div className="flex w-full gap-2">
+          <Link href={loginConfig.route} className="w-full">
+            <Button variant="outline" className="w-full" aria-label="Sign in as Customer">
+              Sign in as Customer
             </Button>
           </Link>
-          <Link className="w-full" href={courierConfig.route}>
-            <Button variant="outline" className="w-full">
-              Courier
+          <Link href={courierConfig.route} className="w-full">
+            <Button variant="outline" className="w-full" aria-label="Sign in as Supplier">
+              Sign in as Supplier
             </Button>
           </Link>
         </div>

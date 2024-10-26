@@ -3,7 +3,7 @@ import { courierConfig } from "@/commons/config";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Nootrack",
+  title: "Enterprize",
   description: "Shipment Delivery Tracking",
 };
 const CourierLayout = ({ children }: { children: React.ReactNode }) => {

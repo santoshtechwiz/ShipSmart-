@@ -32,7 +32,7 @@ export const RegisterSchema = z.object({
 });
 
 export const OrderSchema = z.object({
-  id:z.number(),
+
   orderNumber: z.string().min(4),
   orderContent: z.string().min(1, {
     message: "Content is required",
@@ -49,7 +49,7 @@ export const OrderSchema = z.object({
   deliveryDate:z.date().default(new Date()),
   source:z.string().default(""),
   destination:z.string().default(""),
-  containerId:z.string().default(""),
+  containerId:z.number()  ,
 });
 
 export const ContainerSchema = z.object({
